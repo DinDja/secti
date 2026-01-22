@@ -1,4 +1,3 @@
-// src/utils/pdfGenerator.js
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -16,9 +15,9 @@ export const generateProjectPDF = async (project) => {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
+  const bottomMargin = 25;
 
   try {
-    // --- 1. CAPA (Página 1) ---
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.text('GOVERNO DO ESTADO DA BAHIA', pageWidth / 2, 25, { align: 'center' });
@@ -59,11 +58,9 @@ export const generateProjectPDF = async (project) => {
     doc.text('SALVADOR - BAHIA', pageWidth / 2, pageHeight - 30, { align: 'center' });
     doc.text(`${new Date().getFullYear()}`, pageWidth / 2, pageHeight - 22, { align: 'center' });
 
-    // --- 2. RESERVA DE PÁGINA PARA O SUMÁRIO (Página 2) ---
     doc.addPage();
     const tocPageNumber = 2;
 
-    // --- 3. CONTEÚDO (Inicia na Página 3) ---
     doc.addPage();
     let currentY = 30;
     const sectionsData = [
@@ -82,13 +79,12 @@ export const generateProjectPDF = async (project) => {
     const tocEntries = [];
 
     sectionsData.forEach((section) => {
-      // Registrar posição para o sumário
       tocEntries.push({
         title: section.title,
         page: doc.internal.getNumberOfPages()
       });
 
-      if (currentY > 250) {
+      if (currentY + 15 > pageHeight - bottomMargin) {
         doc.addPage();
         currentY = 25;
       }
@@ -97,19 +93,29 @@ export const generateProjectPDF = async (project) => {
       doc.setFontSize(12);
       doc.setTextColor(0, 0, 0);
       doc.text(section.title, margin, currentY);
-      currentY += 8;
+      currentY += 10;
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(11);
       doc.setTextColor(50, 50, 50);
       const text = section.content || 'Informação não registrada pelo proponente.';
       const splitText = doc.splitTextToSize(text, pageWidth - (margin * 2));
-      doc.text(splitText, margin, currentY);
       
-      currentY += (splitText.length * 6) + 15;
+      splitText.forEach((line) => {
+        if (currentY > pageHeight - bottomMargin) {
+          doc.addPage();
+          currentY = 25;
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(11);
+          doc.setTextColor(50, 50, 50);
+        }
+        doc.text(line, margin, currentY);
+        currentY += 6;
+      });
+      
+      currentY += 10;
     });
 
-    // --- 4. PREENCHIMENTO DO SUMÁRIO (Voltando para Página 2) ---
     doc.setPage(tocPageNumber);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
@@ -123,7 +129,6 @@ export const generateProjectPDF = async (project) => {
       doc.setFont('helvetica', 'bold');
       doc.text(entry.title, margin, tocY);
       
-      // Linha pontilhada (estética ABNT)
       doc.setFont('helvetica', 'normal');
       const titleWidth = doc.getTextWidth(entry.title);
       const pageStr = entry.page.toString();
@@ -137,13 +142,11 @@ export const generateProjectPDF = async (project) => {
       doc.text(dots, margin + titleWidth + 2, tocY);
       doc.text(pageStr, pageWidth - margin, tocY, { align: 'right' });
 
-      // ANCORA CLICÁVEL: Torna a linha do sumário um link para a página
       doc.link(margin, tocY - 5, pageWidth - (margin * 2), 7, { pageNumber: entry.page });
 
       tocY += 10;
     });
 
-    // --- 5. PAGINAÇÃO (Rodapé em todas as páginas exceto capa) ---
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 2; i <= totalPages; i++) {
       doc.setPage(i);

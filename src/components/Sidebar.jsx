@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   LayoutDashboard, FileText, ClipboardCheck, LogOut,
-  ChevronLeft, ChevronRight, FolderOpen, ChevronDown, ChevronUp
+  ChevronLeft, ChevronRight, FolderOpen, User
 } from 'lucide-react';
 import SectiLogo from './SectiLogo';
 
@@ -16,7 +16,6 @@ const Sidebar = ({
   setAuthenticated,
   user
 }) => {
-  // PAGINAÇÃO TÁTICA
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -26,12 +25,10 @@ const Sidebar = ({
 
   const isAdmin = user?.role === 'admin';
 
-  // FILTRO LATERAL
   const visibleProjects = isAdmin
     ? projects
     : projects.filter(p => p.userId === user?.uid);
 
-  // LÓGICA DE PAGINAÇÃO
   const totalPages = Math.ceil(visibleProjects.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedProjects = visibleProjects.slice(startIndex, startIndex + itemsPerPage);
@@ -39,20 +36,18 @@ const Sidebar = ({
   return (
     <aside style={{ height: '100%' }} className={`relative z-30 flex flex-col border-r border-slate-200 bg-white/80 backdrop-blur-md transition-all duration-500 shadow-xl ${sidebarOpen ? 'w-72' : 'w-20'}`}>
 
-      {/* BRANDING */}
       <div className="h-20 flex items-center px-6 border-b border-slate-100 bg-white/50">
         <div className={`flex items-center gap-3 transition-all ${!sidebarOpen && 'justify-center w-full'}`}>
           <SectiLogo size="medium" className={sidebarOpen ? "" : "mx-auto"} />
           {sidebarOpen && (
             <div>
-              <h1 className="text-xl font-black text-slate-800 tracking-tighter leading-none">SECTI.OS</h1>
+              <h1 className="text-xl font-black text-slate-800 tracking-tighter leading-none title">INFO<span>.SECTI</span></h1>
               <span className="text-[9px] font-bold text-blue-500 uppercase tracking-widest">Estrutura de Projetos</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* BOTÃO RETRÁTIL */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className="absolute -right-3 top-24 bg-white border border-slate-200 rounded-full p-1 shadow-sm hover:bg-blue-50 transition-colors z-50"
@@ -60,7 +55,6 @@ const Sidebar = ({
         {sidebarOpen ? <ChevronLeft className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
       </button>
 
-      {/* NAVEGAÇÃO PRINCIPAL */}
       <div className="flex-1 py-4 overflow-y-auto no-scrollbar flex flex-col">
         <nav className="px-3 space-y-1">
           <button
@@ -168,16 +162,21 @@ const Sidebar = ({
         )}
       </div>
 
-      {/* PERFIL E LOGOUT */}
       <div className="p-4 border-t border-slate-100 bg-slate-50/50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="relative flex-shrink-0">
-              <img
-                src={user?.photoURL || 'https://via.placeholder.com/40'}
-                alt="Profile"
-                className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover bg-slate-200"
-              />
+        <div className={`flex items-center ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="relative flex-shrink-0 w-10 h-10">
+              {user?.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt="Profile"
+                  className="w-full h-full rounded-full border-2 border-white shadow-sm object-cover bg-slate-200"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full border-2 border-white shadow-sm bg-slate-200 flex items-center justify-center text-slate-400">
+                  <User size={20} />
+                </div>
+              )}
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
 
@@ -193,14 +192,26 @@ const Sidebar = ({
             )}
           </div>
 
+          {sidebarOpen && (
+            <button
+              onClick={handleLogout}
+              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              title="Encerrar Sessão"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        
+        {!sidebarOpen && (
           <button
             onClick={handleLogout}
-            className={`p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ${!sidebarOpen && 'mx-auto'}`}
+            className="mt-3 w-full flex justify-center p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
             title="Encerrar Sessão"
           >
             <LogOut className="w-4 h-4" />
           </button>
-        </div>
+        )}
       </div>
     </aside>
   );

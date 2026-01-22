@@ -12,14 +12,17 @@ import {
   Plus,
   Filter,
   ShieldCheck,
-  X
+  Download,
+  X,
+  FileSpreadsheet,
+  Settings
 } from 'lucide-react';
 import { db } from '../firebase/config';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import * as XLSX from 'xlsx';
 import AnimatedButton from './AnimatedButton';
 import HudBorder from './HudBorder';
 import SectiLogo from './SectiLogo';
-import { DECKS } from '../utils/decks';
 import { EMPTY_PROJECT } from '../utils/constants';
 
 const Dashboard = ({ setView, setCurrentProject, setCurrentDeck, projects, user }) => {
@@ -56,6 +59,62 @@ const Dashboard = ({ setView, setCurrentProject, setCurrentDeck, projects, user 
     }
   }, [isAdmin]);
 
+  const formatUpdateDate = (timestamp) => {
+    if (!timestamp) return 'Sem registro';
+    if (timestamp.seconds) {
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      }).format(new Date(timestamp.seconds * 1000));
+    }
+    const date = new Date(timestamp);
+    return isNaN(date.getTime()) ? 'Data Inválida' : 
+      new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      }).format(date);
+  };
+
+  const exportToExcel = () => {
+    const header = [
+      ["RELATÓRIO DE DIRETRIZES E PROJETOS - SECTI.OS"],
+      ["GERADO EM:", new Date().toLocaleString('pt-BR')],
+      [""], 
+      ["ID", "TÍTULO DO PROJETO", "RESPONSÁVEL", "EMAIL", "NATUREZA", "STATUS ATUAL", "ÚLTIMA ATUALIZAÇÃO"]
+    ];
+
+    const rows = myProjects.map((p, index) => [
+      index + 1,
+      p.titulo?.toUpperCase() || 'SEM TÍTULO',
+      p.responsavel?.toUpperCase() || 'NÃO INFORMADO',
+      p.email?.toLowerCase() || '-',
+      p.natureza?.toUpperCase() || '-',
+      p.status?.toUpperCase() || 'RASCUNHO',
+      formatUpdateDate(p.updatedAt)
+    ]);
+
+    const worksheet = XLSX.utils.aoa_to_sheet([...header, ...rows]);
+
+    worksheet['!cols'] = [
+      { wch: 5 },  
+      { wch: 50 }, 
+      { wch: 35 }, 
+      { wch: 40 }, 
+      { wch: 15 }, 
+      { wch: 20 }, 
+      { wch: 25 }, 
+    ];
+
+    worksheet['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "SectiOS_Radar");
+
+    XLSX.writeFile(workbook, `SECTI_RELATORIO_${new Date().getTime()}.xlsx`);
+  };
+
   const initiateStatusChange = (projectId, newStatus) => {
     if (!projectId) return;
     setPendingUpdate({ id: projectId, status: newStatus });
@@ -79,12 +138,12 @@ const Dashboard = ({ setView, setCurrentProject, setCurrentDeck, projects, user 
     }
   };
 
-  const getStatusStyle = (status) => {
+  const getStatusColor = (status) => {
     switch (status) {
-      case 'Aprovado': return 'bg-emerald-500/10 text-emerald-600 border-emerald-200';
-      case 'Em Análise': return 'bg-blue-500/10 text-blue-600 border-blue-200';
-      case 'Revisão Necessária': return 'bg-rose-500/10 text-rose-600 border-rose-200';
-      default: return 'bg-slate-500/10 text-slate-600 border-slate-200';
+      case 'Aprovado': return 'bg-emerald-500';
+      case 'Em Análise': return 'bg-blue-500';
+      case 'Revisão Necessária': return 'bg-rose-500';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -126,28 +185,41 @@ const Dashboard = ({ setView, setCurrentProject, setCurrentDeck, projects, user 
           <SectiLogo size="small" className="md:hidden" />
           <SectiLogo size="large" className="hidden md:block" />
           <div>
-            <h1 className="text-xl md:text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">SECTI.OS</h1>
+            <h1 className="text-xl md:text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none title">INFO<span>.SECTI</span></h1>
             <p className="text-[10px] md:text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">{isAdmin ? 'Painel de controle' : 'Meus Projetos'}</p>
           </div>
         </div>
-        <div className="hidden md:block">
-          <AnimatedButton onClick={() => { setCurrentProject({...EMPTY_PROJECT, responsavel: user.name, email: user.email, userId: user.uid}); setView('editor'); }} text="Novo Projeto" />
+        <div className="flex items-center gap-3">
+          <div className="hidden md:block">
+            <AnimatedButton onClick={() => { setCurrentProject({...EMPTY_PROJECT, responsavel: user.name, email: user.email, userId: user.uid}); setView('editor'); }} text="Novo" />
+          </div>
         </div>
       </div>
 
-      <div className=" top-0 z-40 bg-slate-50/80 backdrop-blur-md py-4 mb-8 -mx-4 px-4 flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+      <div className="top-0 z-40 bg-slate-50/80 backdrop-blur-md py-4 mb-8 -mx-4 px-4 flex gap-4 items-center">
+        <div className="input-container flex-1 md:flex-none">
           <input 
             type="text" 
-            placeholder="Rastrear projeto..." 
+            className="input" 
+            placeholder="RASTREAR PROJETO..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all shadow-sm"
           />
+          <span className="icon"> 
+            <svg width="19px" height="19px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+              <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+              <g id="SVGRepo_iconCarrier"> 
+                <path opacity="1" d="M14 5H20" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path> 
+                <path opacity="1" d="M14 8H17" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path> 
+                <path d="M21 11.5C21 16.75 16.75 21 11.5 21C6.25 21 2 16.75 2 11.5C2 6.25 6.25 2 11.5 2" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"></path> 
+                <path opacity="1" d="M22 22L20 20" stroke="#000" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"></path> 
+              </g>
+            </svg>
+          </span>
         </div>
-        <button className="bg-white border border-slate-200 p-3.5 rounded-2xl md:hidden">
-          <Filter className="w-5 h-5 text-slate-600" />
+        <button className="bg-white border-[2.5px] border-black p-[7px] md:hidden">
+          <Filter className="w-5 h-5 text-black" />
         </button>
       </div>
 
@@ -167,37 +239,72 @@ const Dashboard = ({ setView, setCurrentProject, setCurrentDeck, projects, user 
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] px-1">Radar de Atividade</h2>
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Radar de Atividade</h2>
+          <div className="button-container scale-[0.6] origin-right md:scale-[0.75]">
+            <button className="brutalist-button excel-variant" onClick={exportToExcel}>
+              <div className="excel-logo">
+                <FileSpreadsheet className="excel-icon" />
+              </div>
+              <div className="button-text">
+                <span>GERAR</span>
+                <span>PLANILHA</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
         {myProjects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {myProjects.map((project) => (
-              <div key={project.id || Math.random()} className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all group relative">
-                <div className="flex justify-between items-start mb-4">
-                  <div className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-full border ${getStatusStyle(project.status)}`}>
-                    {project.status}
+              <div key={project.id || Math.random()} className="secti-card">
+                <div className="background"></div>
+                
+                <div className="card-content">
+                  <div className="flex justify-between items-start">
+                    <div className={`${getStatusColor(project.status)} text-[8px] font-black uppercase px-2 py-1 rounded-md text-white tracking-widest`}>
+                      {project.status}
+                    </div>
                   </div>
-                  <button onClick={() => { setCurrentProject(project); setView('editor'); }} className="text-slate-300 group-hover:text-blue-600 transition-colors">
-                    <Eye className="w-5 h-5" />
-                  </button>
+                  
+                  <div className="mt-4">
+                    <h3 className="font-black text-white uppercase text-sm leading-tight drop-shadow-md">
+                      {project.titulo || 'Projeto Fantasma'}
+                    </h3>
+                    <div className="flex items-center gap-2 text-[9px] text-white/70 font-bold uppercase mt-2">
+                      <Users className="w-3 h-3" /> {project.responsavel}
+                    </div>
+                    <div className="flex items-center gap-2 text-[9px] text-white/50 font-black uppercase mt-1">
+                      <Clock className="w-3 h-3" /> {formatUpdateDate(project.updatedAt)}
+                    </div>
+                  </div>
                 </div>
-                <h3 className="font-black text-slate-800 uppercase text-sm mb-1 leading-tight">{project.titulo || 'Projeto Fantasma'}</h3>
-                <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase">
-                  <Users className="w-3 h-3" /> {project.responsavel}
+
+                <div className="box box1" onClick={() => { setCurrentProject(project); setView('editor'); }}>
+                  <span className="icon-card"><Eye className="icon-svg" /></span>
                 </div>
-                {isAdmin && (
-                  <div className="mt-4 pt-4 border-t border-slate-50 flex items-center gap-2">
+
+                <div className="box box2" onClick={exportToExcel}>
+                  <span className="icon-card"><FileSpreadsheet className="icon-svg" /></span>
+                </div>
+
+                <div className="box box3">
+                  {isAdmin ? (
                     <select 
                       onChange={(e) => initiateStatusChange(project.id, e.target.value)}
-                      className="flex-1 bg-slate-50 border-none text-[10px] font-black uppercase py-2 px-3 rounded-xl outline-none"
+                      className="bg-transparent border-none text-[8px] font-black uppercase text-white outline-none w-full text-center"
                       value={project.status}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <option value="Em Rascunho">Rascunho</option>
-                      <option value="Em Análise">Análise</option>
-                      <option value="Revisão Necessária">Revisão</option>
-                      <option value="Aprovado">Aprovar</option>
+                      <option className="text-slate-900" value="Em Rascunho">Rascunho</option>
+                      <option className="text-slate-900" value="Em Análise">Análise</option>
+                      <option className="text-slate-900" value="Revisão Necessária">Revisão</option>
+                      <option className="text-slate-900" value="Aprovado">Aprovar</option>
                     </select>
-                  </div>
-                )}
+                  ) : (
+                    <span className="icon-card"><ShieldCheck className="icon-svg" /></span>
+                  )}
+                </div>
               </div>
             ))}
           </div>

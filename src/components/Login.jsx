@@ -160,7 +160,7 @@ const Login = ({ setAuthenticated, isLoggingIn, setIsLoggingIn }) => {
           </div>
           
           <div className="banner-content-wrapper text-white">
-            <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2 uppercase tracking-tighter">SECTI.OS</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2 uppercase tracking-tighter">INFO.SECTI</h1>
             <p className="text-base md:text-lg opacity-90 font-medium">Sistema de Estruturação de Projetos</p>
             <p className="text-xs md:text-sm opacity-70 mt-2 md:mt-4 font-bold uppercase tracking-widest text-blue-300">Governo do Estado da Bahia</p>
           </div>
@@ -179,7 +179,7 @@ const Login = ({ setAuthenticated, isLoggingIn, setIsLoggingIn }) => {
 
             <div className={`flip-card__inner ${isSignUp ? 'is-flipped' : ''}`}>
               <div className="flip-card__front">
-                <div className="title">SECTI<span>.OS</span></div>
+                <div className="title">INFO<span>.SECTI</span></div>
                 <form className="flip-card__form" onSubmit={handleEmailAuth}>
                   <input 
                     className="flip-card__input" 
