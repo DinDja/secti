@@ -94,7 +94,6 @@ const App = () => {
 
       const projectToSave = {
         ...currentProject,
-        responsavel: user.name,
         email: user.email,
         status: statusFinal,
         updatedAt: new Date(),

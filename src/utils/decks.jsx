@@ -1,70 +1,56 @@
+import React from 'react';
 import {
-  Building2, Search, Target, Cpu, DollarSign,
-  BarChart3, ShieldAlert
+  Building2, Search, Target, Cpu, 
+  ClipboardList, BarChart3
 } from 'lucide-react';
 
 export const DECKS = [
   {
     id: 'identificacao',
-    nome: '1. Identificação',
-    sections: [1],
+    nome: 'Identificação',
     icon: <Building2 />,
-    desc: 'Dados Institucionais e Identificação',
+    desc: 'Dados Institucionais',
     color: 'text-blue-600',
-    deckInfo: 'Informações básicas de identificação do projeto/programa'
+    deckInfo: 'Informações básicas de identificação do projeto/programa e unidade executora.'
   },
   {
     id: 'diagnostico',
-    nome: '2-3. Diagnóstico & Fund.',
-    sections: [2, 3],
+    nome: 'Diagnóstico & Fund.',
     icon: <Search />,
     desc: 'Contexto e Base Legal',
     color: 'text-indigo-600',
-    deckInfo: 'Análise do problema e fundamentação legal/teórica'
+    deckInfo: 'Caracterização do contexto, problema, evidências, justificativa e fundamentação legal.'
   },
   {
     id: 'estrategia',
-    nome: '4-6. Estratégia',
-    sections: [4, 5, 6],
+    nome: 'Objetivos e Público',
     icon: <Target />,
-    desc: 'Objetivos, Público e Abrangência',
+    desc: 'Estratégia e Abrangência',
     color: 'text-purple-600',
-    deckInfo: 'Definição de metas, beneficiários e alcance geográfico'
-  },
-  {
-    id: 'execucao',
-    nome: '7-9. Execução',
-    sections: [7, 8, 9],
-    icon: <Cpu />,
-    desc: 'Metodologia e Cronograma',
-    color: 'text-emerald-600',
-    deckInfo: 'Plano operacional e distribuição temporal das atividades'
+    deckInfo: 'Objetivos gerais e específicos, beneficiários, perfil do público e localização.'
   },
   {
     id: 'recursos',
-    nome: '10. Recursos',
-    sections: [10],
-    icon: <DollarSign />,
-    desc: 'Humanos, Materiais e Financeiros',
+    nome: 'Recursos',
+    icon: <ClipboardList />,
+    desc: 'Humanos e Materiais',
     color: 'text-yellow-600',
-    deckInfo: 'Necessidades de recursos para execução do projeto'
+    deckInfo: 'Detalhamento dos recursos humanos, materiais e financeiros necessários.'
   },
   {
-    id: 'monitoramento',
-    nome: '11-12. Monitoramento',
-    sections: [11, 12],
-    icon: <BarChart3 />,
-    desc: 'Resultados e Indicadores',
-    color: 'text-rose-600',
-    deckInfo: 'Acompanhamento, avaliação e medição de resultados'
+    id: 'metas',
+    nome: 'Metas e Execução',
+    icon: <Cpu />,
+    desc: 'Física e Financeira',
+    color: 'text-emerald-600',
+    deckInfo: 'Definição da meta física e cronograma de execução física e financeira.'
   },
   {
     id: 'sustentabilidade',
-    nome: '13-15. Sust. & Riscos',
-    sections: [13, 14, 15],
-    icon: <ShieldAlert />,
-    desc: 'Continuidade, Riscos e Referências',
-    color: 'text-orange-600',
-    deckInfo: 'Plano de sustentabilidade, análise de riscos e bibliografia'
+    nome: 'Sustentabilidade',
+    icon: <BarChart3 />,
+    desc: 'Riscos e Mitigação',
+    color: 'text-rose-600',
+    deckInfo: 'Plano de sustentabilidade pós-projeto e análise de riscos.'
   }
 ];

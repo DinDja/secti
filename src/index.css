@@ -30,7 +30,9 @@
 
 
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 
 
@@ -224,11 +226,17 @@ body {
 
 @keyframes pulse-icon {
 
-  0% { transform: translate(-50%, -50%) scale(1); }
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
 
-  50% { transform: translate(-50%, -50%) scale(1.1); }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
 
-  100% { transform: translate(-50%, -50%) scale(1); }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
 
 }
 
@@ -466,11 +474,29 @@ body {
 
 
 
-.secti-card .box1 { width: 75%; height: 75%; bottom: -75%; left: -75%; transition-delay: 0.05s; }
+.secti-card .box1 {
+  width: 75%;
+  height: 75%;
+  bottom: -75%;
+  left: -75%;
+  transition-delay: 0.05s;
+}
 
-.secti-card .box2 { width: 55%; height: 55%; bottom: -55%; left: -55%; transition-delay: 0.15s; }
+.secti-card .box2 {
+  width: 55%;
+  height: 55%;
+  bottom: -55%;
+  left: -55%;
+  transition-delay: 0.15s;
+}
 
-.secti-card .box3 { width: 35%; height: 35%; bottom: -35%; left: -35%; transition-delay: 0.25s; }
+.secti-card .box3 {
+  width: 35%;
+  height: 35%;
+  bottom: -35%;
+  left: -35%;
+  transition-delay: 0.25s;
+}
 
 
 
@@ -599,8 +625,105 @@ body {
 
 
 
-.input-container:hover > .icon {
+.input-container:hover>.icon {
 
   animation: anim 1s linear infinite;
 
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  visibility: hidden;
+  display: none;
+}
+
+.checkbox-wrapper *,
+.checkbox-wrapper ::after,
+.checkbox-wrapper ::before {
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.checkbox-wrapper {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+
+.checkbox-wrapper .label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-wrapper .check {
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  opacity: 0;
+}
+
+.checkbox-wrapper .label svg {
+  vertical-align: middle;
+}
+
+.checkbox-wrapper .path1 {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  transition: .5s stroke-dashoffset;
+  opacity: 0;
+}
+
+.checkbox-wrapper .check:checked+label svg g path {
+  stroke-dashoffset: 0;
+  opacity: 1;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  visibility: hidden;
+  display: none;
+}
+
+.checkbox-wrapper *,
+.checkbox-wrapper ::after,
+.checkbox-wrapper ::before {
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.checkbox-wrapper {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.checkbox-wrapper .label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-wrapper .check {
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  opacity: 0;
+}
+
+.checkbox-wrapper .label svg {
+  vertical-align: middle;
+}
+
+.checkbox-wrapper .path1 {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  transition: .5s stroke-dashoffset;
+  opacity: 0;
+}
+
+.checkbox-wrapper .check:checked+label svg g path {
+  stroke-dashoffset: 0;
+  opacity: 1;
 }
