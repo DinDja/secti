@@ -15,10 +15,11 @@ import {
   Download,
   X,
   FileSpreadsheet,
-  Settings
+  Settings,
+  Trash2
 } from 'lucide-react';
 import { db } from '../firebase/config';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
 import AnimatedButton from './AnimatedButton';
 import HudBorder from './HudBorder';
@@ -28,8 +29,10 @@ import { EMPTY_PROJECT } from '../utils/constants';
 const Dashboard = ({ setView, setCurrentProject, setCurrentDeck, projects, user }) => {
   const [totalUsers, setTotalUsers] = useState(0);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [pendingUpdate, setPendingUpdate] = useState(null);
+  const [projectToDelete, setProjectToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const isAdmin = user?.role === 'admin';
@@ -138,6 +141,24 @@ const Dashboard = ({ setView, setCurrentProject, setCurrentDeck, projects, user 
     }
   };
 
+  const initiateDelete = (project) => {
+    setProjectToDelete(project);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!projectToDelete?.id) return;
+    try {
+      await deleteDoc(doc(db, 'projects', projectToDelete.id));
+      setShowDeleteModal(false);
+      setProjectToDelete(null);
+      setShowSuccessModal(true);
+      setTimeout(() => setShowSuccessModal(false), 2000);
+    } catch (error) {
+      console.error("Erro ao deletar:", error);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'Aprovado': return 'bg-emerald-500';
@@ -153,7 +174,7 @@ const Dashboard = ({ setView, setCurrentProject, setCurrentDeck, projects, user 
     <div className="pb-24 md:pb-10 px-4 md:px-0 max-w-7xl mx-auto animate-in fade-in duration-500">
       
       {showConfirmModal && (
-        <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 md:p-4">
+        <div className="fixed inset-0 z-[300] flex items-end md:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 md:p-4">
           <div className="bg-white p-8 rounded-t-[2.5rem] md:rounded-3xl w-full max-w-md shadow-2xl animate-in slide-in-from-bottom-full md:zoom-in-95 duration-300">
             <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 md:hidden" />
             <div className="flex flex-col items-center text-center">
@@ -171,11 +192,30 @@ const Dashboard = ({ setView, setCurrentProject, setCurrentDeck, projects, user 
         </div>
       )}
 
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[300] flex items-end md:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 md:p-4">
+          <div className="bg-white p-8 rounded-t-[2.5rem] md:rounded-3xl w-full max-w-md shadow-2xl animate-in slide-in-from-bottom-full md:zoom-in-95 duration-300 border-t-8 border-rose-500">
+            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 md:hidden" />
+            <div className="flex flex-col items-center text-center">
+              <div className="p-4 bg-rose-50 rounded-full mb-4">
+                <Trash2 className="w-10 h-10 text-rose-500" />
+              </div>
+              <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Apagar Projeto?</h3>
+              <p className="text-slate-500 mt-2 mb-8">Esta ação removerá <span className="font-bold text-slate-900">{projectToDelete?.titulo}</span> permanentemente da frota.</p>
+              <div className="flex flex-col gap-3 w-full">
+                <button onClick={confirmDelete} className="w-full py-4 bg-rose-600 text-white rounded-2xl font-bold uppercase tracking-widest shadow-lg active:scale-95 transition-all">Excluir Agora</button>
+                <button onClick={() => setShowDeleteModal(false)} className="w-full py-4 text-slate-400 font-bold uppercase tracking-widest active:scale-95 transition-all">Manter</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showSuccessModal && (
-        <div className="fixed top-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 z-[210] animate-in slide-in-from-top-full">
+        <div className="fixed top-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 z-[310] animate-in slide-in-from-top-full">
           <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-slate-700">
             <div className="bg-emerald-500 p-1 rounded-full"><ShieldCheck className="w-5 h-5 text-white" /></div>
-            <span className="text-xs font-black uppercase tracking-widest">Missão Atualizada com Sucesso</span>
+            <span className="text-xs font-black uppercase tracking-widest">Atualizado com Sucesso</span>
           </div>
         </div>
       )}
@@ -228,12 +268,8 @@ const Dashboard = ({ setView, setCurrentProject, setCurrentDeck, projects, user 
           <div className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1">Documentos</div>
           <div className="text-3xl md:text-5xl font-black text-slate-900">{myProjects.length}</div>
         </HudBorder>
-        <HudBorder className="bg-white p-5 md:p-8 rounded-2xl border border-slate-100 shadow-sm">
-          <div className="text-emerald-500 text-[9px] font-black uppercase tracking-widest mb-1">Aprovados</div>
-          <div className="text-3xl md:text-5xl font-black text-slate-900">{myProjects.filter(p => p.status === 'Aprovado').length}</div>
-        </HudBorder>
         <HudBorder className="bg-white p-5 md:p-8 rounded-2xl border border-slate-100 shadow-sm col-span-2 md:col-span-1">
-          <div className="text-blue-500 text-[9px] font-black uppercase tracking-widest mb-1">{isAdmin ? 'Usuários' : 'Em Análise'}</div>
+          <div className="text-blue-500 text-[9px] font-black uppercase tracking-widest mb-1">{isAdmin ? 'Técnicos' : 'Em Análise'}</div>
           <div className="text-3xl md:text-5xl font-black text-slate-900">{isAdmin ? totalUsers : myProjects.filter(p => p.status === 'Em Análise').length}</div>
         </HudBorder>
       </div>
@@ -260,11 +296,24 @@ const Dashboard = ({ setView, setCurrentProject, setCurrentDeck, projects, user 
               <div key={project.id || Math.random()} className="secti-card">
                 <div className="background"></div>
                 
-                <div className="card-content">
-                  <div className="flex justify-between items-start">
-                    <div className={`${getStatusColor(project.status)} text-[8px] font-black uppercase px-2 py-1 rounded-md text-white tracking-widest`}>
+                <div className="card-content relative z-10">
+                  <div className="flex justify-between items-start pointer-events-none">
+                    <div className={`${getStatusColor(project.status)} text-[8px] font-black uppercase px-2 py-1 rounded-md text-white tracking-widest pointer-events-auto`}>
                       {project.status}
                     </div>
+                    {isAdmin && (
+                      <button 
+                        onClick={(e) => { 
+                          e.preventDefault();
+                          e.stopPropagation(); 
+                          initiateDelete(project); 
+                        }}
+                        className="p-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-all shadow-lg active:scale-90 pointer-events-auto relative z-[50]"
+                        title="Eliminar Alvo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                   
                   <div className="mt-4">
@@ -280,15 +329,15 @@ const Dashboard = ({ setView, setCurrentProject, setCurrentDeck, projects, user 
                   </div>
                 </div>
 
-                <div className="box box1" onClick={() => { setCurrentProject(project); setView('editor'); }}>
+                <div className="box box1 z-20" onClick={() => { setCurrentProject(project); setView('editor'); }}>
                   <span className="icon-card"><Eye className="icon-svg" /></span>
                 </div>
 
-                <div className="box box2" onClick={exportToExcel}>
+                <div className="box box2 z-20" onClick={exportToExcel}>
                   <span className="icon-card"><FileSpreadsheet className="icon-svg" /></span>
                 </div>
 
-                <div className="box box3">
+                <div className="box box3 z-20">
                   {isAdmin ? (
                     <select 
                       onChange={(e) => initiateStatusChange(project.id, e.target.value)}

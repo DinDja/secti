@@ -32,7 +32,7 @@ export const HELP_TEXT = {
     // Deck 1: Contextualização e Fundamentação
     contexto: {
         text: "Caracterização do Contexto",
-        sub: "Descreva o território, público-alvo, setor de atuação e situação atual."
+        sub: "Descreva o historico e situação social atual."
     },
     problemaDemanda: {
         text: "Problema ou Demanda Identificada",
