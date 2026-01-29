@@ -81,45 +81,32 @@ const App = () => {
     setCurrentProject(prev => ({ ...prev, [field]: value }));
   };
 
-  const saveProject = async (statusManual = null) => {
-    try {
-      let statusFinal;
-      if (statusManual === 'download') {
-        statusFinal = currentProject.status || 'Em Rascunho';
-      } else {
-        statusFinal = (statusManual && typeof statusManual === 'string')
-          ? statusManual
-          : (currentProject.status || 'Em Rascunho');
-      }
-
-      const projectToSave = {
-        ...currentProject,
-        email: user.email,
-        status: statusFinal,
-        updatedAt: new Date(),
-        userId: user.uid
-      };
-
-      const { id, ...dataToSave } = projectToSave;
-
-      if (id) {
-        const projectRef = doc(db, 'projects', id);
-        await updateDoc(projectRef, dataToSave);
-      } else {
-        const docRef = await addDoc(collection(db, 'projects'), dataToSave);
-        setCurrentProject({ ...projectToSave, id: docRef.id });
-      }
-
-      if (statusManual === 'Em Análise') {
-        setView('dashboard');
-      }
-
-      return projectToSave;
-    } catch (error) {
-      console.error('Erro na persistência:', error);
-      throw error;
-    }
+const saveProject = async () => {
+  const base = {
+    ...currentProject,
+    email: user.email,
+    updatedAt: new Date(),
   };
+
+  const { id, ...dataToSave } = base;
+
+  if (id) {
+    // NÃO MEXE EM userId NO UPDATE
+    const { userId, ...safeUpdate } = dataToSave;
+    await updateDoc(doc(db, 'projects', id), safeUpdate);
+    return { ...base, userId: currentProject.userId };
+  } else {
+    // SÓ DEFINE userId NA CRIAÇÃO
+    const createData = { ...dataToSave, userId: user.uid };
+    const docRef = await addDoc(collection(db, 'projects'), createData);
+    const saved = { ...base, userId: user.uid, id: docRef.id };
+    setCurrentProject(saved);
+    return saved;
+  }
+};
+
+
+
   const handleDownload = async () => {
     setIsDownloading(true);
 
